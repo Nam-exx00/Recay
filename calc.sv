@@ -35,5 +35,6 @@ module calc(
         5: result = left & right;
         6: result = left | right;
         7: result = left ^ right;
+        default: result = 0;
     endcase
 endmodule
