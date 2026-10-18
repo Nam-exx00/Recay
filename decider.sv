@@ -21,9 +21,25 @@
 */
 
 module decider(
-    input [5:0] left,
-    input [5:0] right,
-    output reg result
+    input [2*`BIT-1:0] left,
+    input [2*`BIT-1:0] right,
+    output sl,
+    output sr,
+    output e
 );
-    assign result = (left == right);
+    wire [`BIT-1:0] ll = left[`BIT-1:0];
+    wire [`BIT-1:0] lr = left[2*`BIT-1:`BIT];
+    wire [`BIT-1:0] rl = right[`BIT-1:0];
+    wire [`BIT-1:0] rr = right[2*`BIT-1:`BIT];
+
+    wire [`BIT-1:0] eq, ne;
+    generate for (genvar ptr = 0; ptr < `BIT; ptr++) begin
+        assign eq[ptr] = (ll[ptr] & rl[ptr]) | (lr[ptr] & rr[ptr]);
+        assign ne[ptr] = (ll[ptr] & rr[ptr]) | (lr[ptr] & rl[ptr]);
+    end endgenerate
+
+    assign sr = &eq;
+    assign sl = |ne;
+
+    assign e = (|(ll & lr)) | (|(rl & rr));
 endmodule

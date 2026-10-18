@@ -21,15 +21,80 @@
 */
 
 module calc(
-    input [5:0] left,
-    input [5:0] right,
-    input [2:0] opcode,
-    output [5:0] result
+    input [2*`BIT-1:0] left,
+    input [2*`BIT-1:0] right,
+    input [5:0] opcode,
+    output [2*`BIT-1:0] result,
+    output valids,
+    output emptys,
+    output e
 );
-    assign result =
-        (opcode == 0) ? (left + right) : (opcode == 1) ? (left - right) :
-        (opcode == 2) ? (left * right) : (opcode == 3) ? (left / right) :
-        (opcode == 4) ? (left % right) : (opcode == 5) ? (left & right) :
-        (opcode == 6) ? (left | right) : (opcode == 7) ? (left ^ right) :
-        0;
+    wire [`BIT-1:0] ll = left[`BIT-1:0];
+    wire [`BIT-1:0] lr = left[2*`BIT-1:`BIT];
+    wire [`BIT-1:0] rl = right[`BIT-1:0];
+    wire [`BIT-1:0] rr = right[2*`BIT-1:`BIT];
+    wire [2:0] oa = opcode[2:0];
+    wire [2:0] ob = opcode[5:3];
+
+    assign valids = (&(ll ^ lr)) & (&(rl ^ rr)) & (&(oa ^ ob));
+    assign emptys = ~(|left) & ~(|right) & ~(|opcode);
+
+    wire [7:0] os;
+    generate for (genvar k = 0; k < 8; k++) begin
+        wire [2:0] s;
+        for (genvar j = 0; j < 3; j++) begin
+            assign s[j] = ((k >> j) & 1) ? ob[j] : oa[j];
+        end
+        assign os[k] = &s;
+    end endgenerate
+
+    assign e = (|(ll & lr)) | (|(rl & rr)) | (|(oa & ob)) |
+               (valids & (os[5] | os[6] | os[7]));
+
+    wire [`BIT:0] cl, cr;
+    wire [`BIT-1:0] al, ar;
+    assign cl[0] = 1'b1;
+    assign cr[0] = 1'b0;
+    generate for (genvar ptr = 0; ptr < `BIT; ptr++) begin
+        assign ar[ptr] = (lr[ptr]&rl[ptr]&cl[ptr]) | (ll[ptr]&rr[ptr]&cl[ptr]) |
+                         (ll[ptr]&rl[ptr]&cr[ptr]) | (lr[ptr]&rr[ptr]&cr[ptr]);
+        assign al[ptr] = (ll[ptr]&rl[ptr]&cl[ptr]) | (lr[ptr]&rr[ptr]&cl[ptr]) |
+                         (lr[ptr]&rl[ptr]&cr[ptr]) | (ll[ptr]&rr[ptr]&cr[ptr]);
+        assign cr[ptr+1] = (lr[ptr]&rr[ptr]) | (lr[ptr]&cr[ptr]) | (rr[ptr]&cr[ptr]);
+        assign cl[ptr+1] = (ll[ptr]|rl[ptr]) & (ll[ptr]|cl[ptr]) & (rl[ptr]|cl[ptr]);
+    end endgenerate
+    wire [2*`BIT-1:0] ao = {ar, al};
+
+    wire [`BIT:0] bl, br;
+    wire [`BIT-1:0] sl, sr;
+    assign bl[0] = 1'b0;
+    assign br[0] = 1'b1;
+    generate for (genvar ptr = 0; ptr < `BIT; ptr++) begin
+        assign sr[ptr] = (lr[ptr]&rr[ptr]&bl[ptr]) | (ll[ptr]&rl[ptr]&bl[ptr]) |
+                         (ll[ptr]&rr[ptr]&br[ptr]) | (lr[ptr]&rl[ptr]&br[ptr]);
+        assign sl[ptr] = (ll[ptr]&rr[ptr]&bl[ptr]) | (lr[ptr]&rl[ptr]&bl[ptr]) |
+                         (lr[ptr]&rr[ptr]&br[ptr]) | (ll[ptr]&rl[ptr]&br[ptr]);
+        assign br[ptr+1] = (lr[ptr]&rl[ptr]) | (lr[ptr]&br[ptr]) | (rl[ptr]&br[ptr]);
+        assign bl[ptr+1] = (ll[ptr]&rr[ptr]) | (ll[ptr]&bl[ptr]) | (rr[ptr]&bl[ptr]);
+    end endgenerate
+    wire [2*`BIT-1:0] so = {sr, sl};
+
+    wire [2*`BIT-1:0] an, ro, xo;
+    generate for (genvar ptr = 0; ptr < `BIT; ptr++) begin
+        assign an[ptr]      = ll[ptr] | rl[ptr];
+        assign an[ptr+`BIT] = lr[ptr] & rr[ptr];
+        assign ro[ptr]      = ll[ptr] & rl[ptr];
+        assign ro[ptr+`BIT] = lr[ptr] | rr[ptr];
+        assign xo[ptr]      = (ll[ptr]&rl[ptr]) | (lr[ptr]&rr[ptr]);
+        assign xo[ptr+`BIT] = (lr[ptr]&rl[ptr]) | (ll[ptr]&rr[ptr]);
+    end endgenerate
+
+    generate for (genvar ptr = 0; ptr < 2*`BIT; ptr++) begin
+        assign result[ptr] =
+            (os[0] & ao[ptr]) |
+            (os[1] & so[ptr]) |
+            (os[2] & an[ptr]) |
+            (os[3] & ro[ptr]) |
+            (os[4] & xo[ptr]);
+    end endgenerate
 endmodule
