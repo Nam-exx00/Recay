@@ -31,7 +31,7 @@ module calc(
 
     always_comb begin
         if (reset) begin
-            result <= 0;
+            result = 0;
         end else begin
             case (opcode)
                 0: result = left + right;
