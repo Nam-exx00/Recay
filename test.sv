@@ -12,9 +12,9 @@ module test;
         $monitor("reset=%d, left=%d, right=%d, opcode=%d, result=%d", reset, left, right, opcode, result);
         reset = 1;
         #10 reset = 0;
-        left <= 5;
+        left <= 4;
         right <= 4;
-        opcode <= 0;
+        opcode <= 7;
         #100 $finish;
     end
 endmodule

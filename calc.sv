@@ -25,7 +25,7 @@ module calc(
 
     input [5:0] left,
     input [5:0] right,
-    input [1:0] opcode,
+    input [2:0] opcode,
     output reg [5:0] result
 );
 
@@ -38,6 +38,10 @@ module calc(
                 1: result = left - right;
                 2: result = left * right;
                 3: result = left / right;
+                4: result = left % right;
+                5: result = left & right;
+                6: result = left | right;
+                7: result = left ^ right;
             endcase
         end
     end
