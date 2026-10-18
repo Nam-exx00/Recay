@@ -21,28 +21,19 @@
 */
 
 module calc(
-    input reset,
-
     input [5:0] left,
     input [5:0] right,
     input [2:0] opcode,
     output reg [5:0] result
 );
-
-    always_comb begin
-        if (reset) begin
-            result = 0;
-        end else begin
-            case (opcode)
-                0: result = left + right;
-                1: result = left - right;
-                2: result = left * right;
-                3: result = left / right;
-                4: result = left % right;
-                5: result = left & right;
-                6: result = left | right;
-                7: result = left ^ right;
-            endcase
-        end
-    end
+    always_comb case (opcode)
+        0: result = left + right;
+        1: result = left - right;
+        2: result = left * right;
+        3: result = left / right;
+        4: result = left % right;
+        5: result = left & right;
+        6: result = left | right;
+        7: result = left ^ right;
+    endcase
 endmodule
