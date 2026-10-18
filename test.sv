@@ -1,16 +1,15 @@
 module test;
     reg [5:0] left;
     reg [5:0] right;
-    reg opcode;
     wire [5:0] result;
 
-    calc p(.left(left), .right(right), .result(result), .opcode(opcode));
+    decider d(.left(left), .right(right), .result(result));
 
     initial begin
-        $monitor("left=%d, right=%d, opcode=%d, result=%d", left, right, opcode, result);
-        left <= 5;
-        right <= 3;
-        opcode <= 1;
+        $monitor("left=%d, right=%d, result=%d", left, right, result);
+        left = 50;
+        right = 50;
+        #1 left = 25;
         #100 $finish;
     end
 endmodule

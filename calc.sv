@@ -24,17 +24,12 @@ module calc(
     input [5:0] left,
     input [5:0] right,
     input [2:0] opcode,
-    output reg [5:0] result
+    output [5:0] result
 );
-    always_comb case (opcode)
-        0: result = left + right;
-        1: result = left - right;
-        2: result = left * right;
-        3: result = left / right;
-        4: result = left % right;
-        5: result = left & right;
-        6: result = left | right;
-        7: result = left ^ right;
-        default: result = 0;
-    endcase
+    assign result =
+        (opcode == 0) ? (left + right) : (opcode == 1) ? (left - right) :
+        (opcode == 2) ? (left * right) : (opcode == 3) ? (left / right) :
+        (opcode == 4) ? (left % right) : (opcode == 5) ? (left & right) :
+        (opcode == 6) ? (left | right) : (opcode == 7) ? (left ^ right) :
+        0;
 endmodule
